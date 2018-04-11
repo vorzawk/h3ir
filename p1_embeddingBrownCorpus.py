@@ -112,7 +112,14 @@ print_2dec(cPDF)
 # Now you can represent each vocabulary word as a |C| dimensional vector using this equation:
 # Vector(w)= max(0, log (Pr(c|w)/Pr(c)))
 
-embedding = cwPDF/cPDF[:,None]
+embedding = np.log(cwPDF/cPDF[:,None])
+embedding = np.maximum(0,embedding)
 
 print('embedding')
 print_2dec(embedding)
+
+# 1.5 is the analysis of the embedding in order to check if the findings make
+# sense. This involves using k-means to find clusters in the vocabulary and
+# also finding the nearest neighbors for the top-20 words.
+
+
