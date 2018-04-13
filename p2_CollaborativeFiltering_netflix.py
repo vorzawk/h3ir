@@ -50,9 +50,11 @@ def evaluate(utility_matrix, dictUsers2Index, dictMovies2Index, testing_file):
     For every user,movie pair in Testing set, find the set of the most similar users in
     the training set who have rated movie and compute the average rating
     """
+    predictions = []
     with open(testing_file) as file:
         for line in file:
             movieId, userId, rating = line.split(',')
+            print("predicting {}'s rating for {}".format(userId,movieId))
             activeUserIndex = dictUsers2Index[userId]
             activeMovieIndex = dictMovies2Index[movieId]
             # Create a mask for the active user, indicating the rated items
@@ -62,16 +64,30 @@ def evaluate(utility_matrix, dictUsers2Index, dictMovies2Index, testing_file):
             sum_similarUserRatings = 0
             for ratings_user in utility_matrix:
                 if ratings_user[activeMovieIndex] != 0:
-                    # Get the ratings of the common items
-                    user_commonRatings = ratings_user * mask
-                    activeUser_commonRatings = ratings_activeUser * mask
-                    pearson_correlation = pearsonr(activeUser_commonRatings,
-                                                   user_commonRatings)[0]
-                    if pearson_correlation > 0.85:
-                        numSimilarUsers += 1
-                        sum_similarUserRatings += ratings_user[activeMovieIndex]
+                    # To measure the similarity, we need to only compare the
+                    # items rated by both users, so create a mask of common
+                    # items
+                    currUser_mask = mask * (ratings_user != 0)
+                    # if the mask contains only 2 items, pearson correlation
+                    # always returns 1 which is not very useful
+                    if (sum(currUser_mask) > 2):
+                        # Get the ratings of the common items
+                        user_commonRatings = ratings_user * currUser_mask
+                        activeUser_commonRatings = ratings_activeUser \
+                                * currUser_mask
+                        pearson_correlation = pearsonr(activeUser_commonRatings,
+                                                       user_commonRatings)[0]
+                        print(user_commonRatings,activeUser_commonRatings,
+                              pearson_correlation)
+                        if pearson_correlation > 0.85:
+                            print("similar user's rating :\
+                                  {}".format(ratings_user))
+                            numSimilarUsers += 1
+                            sum_similarUserRatings += ratings_user[activeMovieIndex]
             pred_rating = sum_similarUserRatings / numSimilarUsers
-    print(pred_rating)
+            predictions.append(pred_rating)
+        print(predictions)
+        return predictions
 
 # create_utilityMatrix('netflix-dataset/TrainingRatings.txt')
 # create_utilityMatrix('netflix-dataset/TestingRatings.txt')
