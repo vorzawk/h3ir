@@ -45,14 +45,17 @@ def create_utilityMatrix(ratings_file):
             utility_matrix[user][movie] = rating
     return utility_matrix, dictUsers2Index, dictMovies2Index
 
+def compute_rmse(predictions, expected_values):
+    return np.sqrt(((predictions - expected_values) ** 2).mean())
+
+def compute_mae(predictions, expected_values):
+    return (np.absolute(predictions - expected_values)).mean()
+
 def evaluate(utility_matrix, dictUsers2Index, dictMovies2Index, testing_file):
     """
     For every user,movie pair in Testing set, find the set of the most similar users in
     the training set who have rated movie and compute the average rating
     """
-    def compute_rmse(predictions, expected_values):
-        return np.sqrt(((predictions - expected_values) ** 2).mean())
-
     def get_commonRatings(ratings, mask):
         common_ratings = ratings * mask
         # Remove the zero elements, these lead to a higher correlation value
@@ -110,14 +113,12 @@ def evaluate(utility_matrix, dictUsers2Index, dictMovies2Index, testing_file):
         predictions = np.array(predictions)
         expected_values = np.array(expected_values)
         print(predictions, expected_values)
-        rmse = compute_rmse(predictions, expected_values)
-        print(rmse)
-        return predictions, rmse
+        return predictions, expected_values
 
-training_file = 'netflix-dataset/TrainingRatings.txt'
-testing_file = 'netflix-dataset/TestingRatings_small.txt'
-#training_file = 'trainingData_fake.txt'
-#testing_file = 'testingData_fake.txt'
+# training_file = 'netflix-dataset/TrainingRatings.txt'
+# testing_file = 'netflix-dataset/TestingRatings_small.txt'
+training_file = 'trainingData_fake.txt'
+testing_file = 'testingData_fake.txt'
 #testing_file = 'netflix-dataset/TestingRatings.txt'
 utility_matrix, dictUsers2Index, dictMovies2Index = create_utilityMatrix(
                                                     training_file)
@@ -125,6 +126,9 @@ print('utility_matrix')
 print(utility_matrix)
 
 #create_utilityMatrix('testingData_fake.txt')
-evaluate(utility_matrix, dictUsers2Index, dictMovies2Index, testing_file)
-
+predictions, expected_values = evaluate(utility_matrix, dictUsers2Index, dictMovies2Index, testing_file)
+rmse = compute_rmse(predictions, expected_values)
+print("rmse : {}".format(rmse))
+mae = compute_mae(predictions, expected_values)
+print("mae : {}".format(mae))
 

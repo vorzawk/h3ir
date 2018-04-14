@@ -4,7 +4,7 @@ import string
 # Remove stop words
 from nltk.corpus import stopwords
 stop_words = stopwords.words(fileids='english')
-# listWords = brown.words()
+listWords = brown.words()
 sentence = 'The quick brown fox was too quick for the white fox brown quick \
 fox'
 listWords = sentence.split()
