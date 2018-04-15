@@ -51,6 +51,16 @@ def compute_rmse(predictions, expected_values):
 def compute_mae(predictions, expected_values):
     return (np.absolute(predictions - expected_values)).mean()
 
+def compute_cosineSimilarity(a,b):
+    return np.dot(a,b)/ (np.linalg.norm(a) * np.linalg.norm(b))
+
+def compute_similarity(u, v):
+    u_m = u[u != 0].mean()
+    v_m = v[v != 0].mean()
+    u_mask = (u != 0) * u_m
+    v_mask = (v != 0) * v_m
+    return compute_cosineSimilarity(u - u_mask, v - v_mask)
+
 def evaluate(utility_matrix, dictUsers2Index, dictMovies2Index, testing_file):
     """
     For every user,movie pair in Testing set, find the set of the most similar users in
@@ -64,6 +74,8 @@ def evaluate(utility_matrix, dictUsers2Index, dictMovies2Index, testing_file):
 
     predictions = []
     expected_values = []
+    import sys
+    sys.stdout.flush()
     with open(testing_file) as file:
         for line in file:
             stripped_line = line.strip() # Remove leading/trailing whitespace
@@ -95,19 +107,15 @@ def evaluate(utility_matrix, dictUsers2Index, dictMovies2Index, testing_file):
                             ratings_user, currUser_mask)
                         activeUser_commonRatings = get_commonRatings(
                             ratings_activeUser, currUser_mask)
-                        pearson_correlation = pearsonr(activeUser_commonRatings,
-                                                       user_commonRatings)[0]
+                        #pearson_correlation = pearsonr(activeUser_commonRatings, user_commonRatings)[0]
+                        cosine_similarity = compute_similarity(user_commonRatings,
+                                           activeUser_commonRatings)
                       #  print(user_commonRatings, activeUser_commonRatings,
                       #        pearson_correlation)
-                        if pearson_correlation > 0.7:
-                            print("active user and similar user's rating :\
-                                  {} and {}".format(activeUser_commonRatings,
-                                                    user_commonRatings))
+                        if cosine_similarity > 0.7:
+                            print("active user and similar user's rating : {} and {}".format(activeUser_commonRatings, user_commonRatings))
                             numSimilarUsers += 1
-                            sum_similarUserRatings += (
-                            ratings_user[activeMovieIndex] -
-                             user_commonRatings.mean()
-                            )
+                            sum_similarUserRatings += ( ratings_user[activeMovieIndex] - user_commonRatings.mean())
             pred_rating += (sum_similarUserRatings / (numSimilarUsers + 0.0001))
             predictions.append(pred_rating)
         predictions = np.array(predictions)
@@ -115,16 +123,19 @@ def evaluate(utility_matrix, dictUsers2Index, dictMovies2Index, testing_file):
         print(predictions, expected_values)
         return predictions, expected_values
 
-# training_file = 'netflix-dataset/TrainingRatings.txt'
-# testing_file = 'netflix-dataset/TestingRatings_small.txt'
-training_file = 'trainingData_fake.txt'
-testing_file = 'testingData_fake.txt'
+training_file = 'netflix-dataset/TrainingRatings.txt'
+testing_file = 'netflix-dataset/TestingRatings_small.txt'
+# training_file = 'trainingData_fake.txt'
+# testing_file = 'testingData_fake.txt'
 #testing_file = 'netflix-dataset/TestingRatings.txt'
-utility_matrix, dictUsers2Index, dictMovies2Index = create_utilityMatrix(
-                                                    training_file)
-print('utility_matrix')
-print(utility_matrix)
+utility_matrix, dictUsers2Index, dictMovies2Index = create_utilityMatrix(training_file)
+#print('utility_matrix')
+#print(utility_matrix)
 
+# ans = compute_cosineSimilarity(np.array([1,2,0,0]), np.array([-0.5,0.5,0,0]))
+# print(ans)
+# ans = compute_similarity(np.array([1,2,0,0]), np.array([-0.5,0.5,0,0]))
+# print(ans)
 #create_utilityMatrix('testingData_fake.txt')
 predictions, expected_values = evaluate(utility_matrix, dictUsers2Index, dictMovies2Index, testing_file)
 rmse = compute_rmse(predictions, expected_values)
