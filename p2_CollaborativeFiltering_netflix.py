@@ -51,15 +51,14 @@ def compute_rmse(predictions, expected_values):
 def compute_mae(predictions, expected_values):
     return (np.absolute(predictions - expected_values)).mean()
 
-def compute_cosineSimilarity(a,b):
-    return np.dot(a,b)/ (np.linalg.norm(a) * np.linalg.norm(b))
-
 def compute_similarity(u, v):
     u_m = u[u != 0].mean()
     v_m = v[v != 0].mean()
     u_mask = (u != 0) * u_m
     v_mask = (v != 0) * v_m
-    return compute_cosineSimilarity(u - u_mask, v - v_mask)
+    print(u - u_mask)
+    print(v - v_mask)
+    return np.dot(u - u_mask, v - v_mask)
 
 def evaluate(utility_matrix, dictUsers2Index, dictMovies2Index, testing_file):
     """
@@ -107,12 +106,11 @@ def evaluate(utility_matrix, dictUsers2Index, dictMovies2Index, testing_file):
                             ratings_user, currUser_mask)
                         activeUser_commonRatings = get_commonRatings(
                             ratings_activeUser, currUser_mask)
-                        #pearson_correlation = pearsonr(activeUser_commonRatings, user_commonRatings)[0]
-                        cosine_similarity = compute_similarity(user_commonRatings,
-                                           activeUser_commonRatings)
+                        similarity = pearsonr(activeUser_commonRatings, user_commonRatings)[0]
+                        #similarity = compute_similarity(user_commonRatings, activeUser_commonRatings)
                       #  print(user_commonRatings, activeUser_commonRatings,
                       #        pearson_correlation)
-                        if cosine_similarity > 0.7:
+                        if similarity > 0.7:
                             print("active user and similar user's rating : {} and {}".format(activeUser_commonRatings, user_commonRatings))
                             numSimilarUsers += 1
                             sum_similarUserRatings += ( ratings_user[activeMovieIndex] - user_commonRatings.mean())
@@ -128,14 +126,16 @@ testing_file = 'netflix-dataset/TestingRatings_small.txt'
 # training_file = 'trainingData_fake.txt'
 # testing_file = 'testingData_fake.txt'
 #testing_file = 'netflix-dataset/TestingRatings.txt'
-utility_matrix, dictUsers2Index, dictMovies2Index = create_utilityMatrix(training_file)
+#utility_matrix, dictUsers2Index, dictMovies2Index = create_utilityMatrix(training_file)
 #print('utility_matrix')
 #print(utility_matrix)
 
-# ans = compute_cosineSimilarity(np.array([1,2,0,0]), np.array([-0.5,0.5,0,0]))
-# print(ans)
-# ans = compute_similarity(np.array([1,2,0,0]), np.array([-0.5,0.5,0,0]))
-# print(ans)
+ans = pearsonr(np.array([1,2,1,0,1]), np.array([2,4,2,0,2]))
+print(ans)
+ans = compute_similarity(np.array([1,2,1,0,1]), np.array([2,4,2,0,2]))
+print(ans)
+ans = compute_similarity(np.array([1,2,1,0,1]), np.array([1,2,1,0,1]))
+print(ans)
 #create_utilityMatrix('testingData_fake.txt')
 predictions, expected_values = evaluate(utility_matrix, dictUsers2Index, dictMovies2Index, testing_file)
 rmse = compute_rmse(predictions, expected_values)
